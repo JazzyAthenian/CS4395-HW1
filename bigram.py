@@ -2,42 +2,37 @@ import re
 
 def preprocessing(text):
     text = text.lower()
-    text = re.sub('[^a-z0-9\.\-]', ' ', text)
-    text = re.sub('\s{2,}', ' ', text)
+    text = re.sub('[^a-z0-9\.\-]', ' ', text) # remove special characters
+    text = re.sub('\s{2,}', ' ', text) # change multiple spaces to 1 space
     text = '. ' + text
-    #print(text)
     return text
-def compute_bigram(text):
+def compute_bigram(fileName):
+    f = open(fileName, "r")
     bigrams = dict()
-    tokens = text.split()
-    #print(tokens)
 
-    for i in range(len(tokens)-2):
-        word1 = tokens[i]
-        word2 = tokens[i+1]
+    # going through training data one review at a time
+    for line in f:
+        text = preprocessing(line)
+        tokens = text.split()
 
-        if word1 not in bigrams:
-            bigrams[word1] = dict()
+        # filling out dictionary
+        for i in range(len(tokens)-1):
+            word1 = tokens[i]
+            word2 = tokens[i+1]
 
-        if word2 not in bigrams[word1]:
-            bigrams[word1][word2] = 1
-        else:
-            bigrams[word1][word2] += 1
+            if word1 not in bigrams:
+                bigrams[word1] = dict()
 
-    #print(bigrams)
-    print(bigrams['.'])
-    print(bigrams['i'])
+            if word2 not in bigrams[word1]:
+                bigrams[word1][word2] = 1
+            else:
+                bigrams[word1][word2] += 1
 
-# def use_bigram(fileName):
-#    f = open(fileName, "r")
-#    for line in f:
-#        features = compute_bigram(line)
-#        # train set here
+    # sorting and calculating probabilities
+    for word in bigrams:
+        bigrams[word] = dict(sorted(bigrams[word].items(), key=lambda item: -item[1]))
+        total = sum(bigrams[word].values())
+        bigrams[word] = dict([(k, bigrams[word][k]/total) for k in bigrams[word]])
 
 if __name__ == '__main__':
-    f = open("train.txt", "r")
-    text = ""
-    for line in f:
-        text = text + preprocessing(line) + '\n'
-
-    compute_bigram(text)
+    compute_bigram("train.txt")
